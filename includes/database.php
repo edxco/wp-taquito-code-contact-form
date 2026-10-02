@@ -46,12 +46,19 @@ function scf_get_submission( int $id ): ?array {
     return $row ?: null;
 }
 
-function scf_get_submissions( int $per_page = 20, int $page = 1 ): array {
+// Columns the submissions list can be sorted by.
+const SCF_SORTABLE_COLUMNS = [ 'id', 'name', 'email', 'phone', 'company', 'message', 'submitted_at' ];
+
+function scf_get_submissions( int $per_page = 20, int $page = 1, string $orderby = 'submitted_at', string $order = 'DESC' ): array {
     global $wpdb;
-    $offset = ( $page - 1 ) * $per_page;
-    $table  = $wpdb->prefix . 'scf_submissions';
+    $offset  = ( $page - 1 ) * $per_page;
+    $table   = $wpdb->prefix . 'scf_submissions';
+    // Whitelisted because column names and directions can't be bound by prepare().
+    $orderby = in_array( $orderby, SCF_SORTABLE_COLUMNS, true ) ? $orderby : 'submitted_at';
+    $order   = 'ASC' === strtoupper( $order ) ? 'ASC' : 'DESC';
     return $wpdb->get_results(
-        $wpdb->prepare( "SELECT * FROM {$table} ORDER BY submitted_at DESC LIMIT %d OFFSET %d", $per_page, $offset ),
+        // id as a tiebreaker keeps pages stable when sorted values repeat.
+        $wpdb->prepare( "SELECT * FROM {$table} ORDER BY {$orderby} {$order}, id {$order} LIMIT %d OFFSET %d", $per_page, $offset ),
         ARRAY_A
     );
 }

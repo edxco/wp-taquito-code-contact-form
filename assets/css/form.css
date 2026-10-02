@@ -297,6 +297,8 @@
     line-height: 1.2;
     color: var(--scf-black-dark);
     margin: 0;
+    text-align: center;
+    justify-self: center;
 }
 
 .scf-thankyou-message {

@@ -149,24 +149,84 @@ function scf_render_submissions_page() {
     $pages = (int) ceil( $total / 20 );
     // Clamped so deleting everything on the last page doesn't leave it empty.
     $page  = isset( $_GET['paged'] ) ? max( 1, min( absint( $_GET['paged'] ), $pages ) ) : 1;
-    $items = scf_get_submissions( 20, $page );
+
+    $orderby = sanitize_key( $_GET['orderby'] ?? '' );
+    $orderby = in_array( $orderby, SCF_SORTABLE_COLUMNS, true ) ? $orderby : 'submitted_at';
+    $order   = 'asc' === strtolower( $_GET['order'] ?? '' ) ? 'asc' : 'desc';
+    $items   = scf_get_submissions( 20, $page, $orderby, $order );
+
+    $list_url = add_query_arg( [ 'page' => 'simple-contact-form', 'orderby' => $orderby, 'order' => $order ], admin_url( 'admin.php' ) );
+    $date_fmt = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+
+    // Sortable header cell in WordPress list-table markup, so core styles the
+    // indicators. ID and Date sort newest first on the first click.
+    $sort_th = function ( string $column, string $label ) use ( $orderby, $order ) {
+        $desc_first = in_array( $column, [ 'id', 'submitted_at' ], true );
+        if ( $column === $orderby ) {
+            $classes = "sorted {$order}";
+            $next    = 'asc' === $order ? 'desc' : 'asc';
+            $aria    = sprintf( ' aria-sort="%s"', 'asc' === $order ? 'ascending' : 'descending' );
+        } else {
+            $classes = 'sortable ' . ( $desc_first ? 'asc' : 'desc' );
+            $next    = $desc_first ? 'desc' : 'asc';
+            $aria    = '';
+        }
+        $url = add_query_arg( [ 'page' => 'simple-contact-form', 'orderby' => $column, 'order' => $next ], admin_url( 'admin.php' ) );
+        printf(
+            '<th scope="col" class="manage-column column-%1$s %2$s"%3$s><a href="%4$s"><span>%5$s</span><span class="sorting-indicators"><span class="sorting-indicator asc" aria-hidden="true"></span><span class="sorting-indicator desc" aria-hidden="true"></span></span></a></th>',
+            esc_attr( 'submitted_at' === $column ? 'date' : $column ),
+            esc_attr( $classes ),
+            $aria,
+            esc_url( $url ),
+            esc_html( $label )
+        );
+    };
     ?>
     <style>
-        /* ID and the other short columns shrink to their content; Message takes
-           the remaining width and shows one line until the row is hovered. */
-        .scf-submissions .column-id      { width: 1%; white-space: nowrap; }
-        .scf-submissions .column-date    { white-space: nowrap; }
-        .scf-submissions .column-message { width: 35%; max-width: 0; }
-        .scf-submissions .scf-message {
+        /* Minimal list: no frame or stripes, hairline row separators, and every
+           row the same height. Long values end in an ellipsis and are shown in
+           full in the row's expandable details. */
+        .scf-submissions.widefat { table-layout: fixed; border: 0; box-shadow: none; background: transparent; }
+        .scf-submissions thead th,
+        .scf-submissions thead td { border-bottom: 1px solid #dcdcde; background: transparent; }
+        .scf-submissions thead th,
+        .scf-submissions thead th a { color: #50575e; font-weight: 600; }
+        .scf-submissions tbody > tr:not(.scf-detail) > * {
+            height: 44px;
+            padding-top: 0;
+            padding-bottom: 0;
+            vertical-align: middle;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f1;
         }
-        .scf-submissions tbody tr:hover .scf-message,
-        .scf-submissions tbody tr:focus-within .scf-message {
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
+        .scf-submissions tbody > tr:not(.scf-detail) { cursor: pointer; }
+        .scf-submissions tbody .check-column { cursor: default; }
+        .scf-submissions tbody .check-column input { margin-top: 0; }
+        .scf-submissions .column-toggle  { width: 32px; padding-left: 0; padding-right: 0; text-align: center; }
+        .scf-submissions .column-id      { width: 64px; }
+        .scf-submissions .column-name    { width: 14%; }
+        .scf-submissions .column-email   { width: 18%; }
+        .scf-submissions .column-phone   { width: 11%; }
+        .scf-submissions .column-company { width: 12%; }
+        .scf-submissions .column-date    { width: 160px; }
+        .scf-submissions .column-actions { width: 64px; text-align: right; }
+
+        .scf-toggle {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; padding: 0;
+            border: 0; border-radius: 4px; background: none; color: #50575e; cursor: pointer;
         }
+        .scf-toggle:focus { outline: 0; box-shadow: 0 0 0 2px #2271b1; }
+        .scf-toggle .dashicons { transition: transform .15s ease; }
+        .scf-toggle[aria-expanded="true"] .dashicons { transform: rotate(90deg); }
+
+        .scf-detail > td { padding: 12px 16px 16px 72px; background: #f6f7f7; border-bottom: 1px solid #f0f0f1; }
+        .scf-detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 24px; margin: 0; }
+        .scf-detail dt { color: #50575e; font-weight: 600; }
+        .scf-detail dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
     </style>
     <div class="wrap">
         <h1>Contact Form Submissions <span class="scf-count">(<?php echo $total; ?>)</span></h1>
@@ -186,40 +246,69 @@ function scf_render_submissions_page() {
                     <?php submit_button( 'Apply', 'action', '', false, [ 'id' => 'scf-bulk-apply' ] ); ?>
                 </div>
             </div>
-        <table class="wp-list-table widefat striped scf-submissions">
+        <table class="wp-list-table widefat scf-submissions">
             <thead>
                 <tr>
                     <td class="manage-column column-cb check-column">
                         <label class="screen-reader-text" for="scf-select-all">Select all</label>
                         <input id="scf-select-all" type="checkbox">
                     </td>
-                    <th class="column-id">ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Company</th>
-                    <th class="column-message">Message</th><th class="column-date">Date</th><th>Actions</th>
+                    <td class="manage-column column-toggle"><span class="screen-reader-text">Details</span></td>
+                    <?php
+                    $sort_th( 'id', 'ID' );
+                    $sort_th( 'name', 'Name' );
+                    $sort_th( 'email', 'Email' );
+                    $sort_th( 'phone', 'Phone' );
+                    $sort_th( 'company', 'Company' );
+                    $sort_th( 'message', 'Message' );
+                    $sort_th( 'submitted_at', 'Date' );
+                    ?>
+                    <th scope="col" class="manage-column column-actions"><span class="screen-reader-text">Actions</span></th>
                 </tr>
             </thead>
             <tbody>
-            <?php foreach ( $items as $row ) : ?>
+            <?php foreach ( $items as $row ) :
+                $id      = (int) $row['id'];
+                $date    = date_i18n( $date_fmt, strtotime( $row['submitted_at'] ) );
+                $del_url = wp_nonce_url(
+                    add_query_arg( [ 'delete_id' => $id, 'paged' => $page ], $list_url ),
+                    'scf_delete_' . $id
+                );
+                ?>
                 <tr>
                     <th scope="row" class="check-column">
-                        <label class="screen-reader-text" for="scf-cb-<?php echo esc_attr( $row['id'] ); ?>">Select submission <?php echo esc_html( $row['id'] ); ?></label>
-                        <input id="scf-cb-<?php echo esc_attr( $row['id'] ); ?>" type="checkbox" name="ids[]" value="<?php echo esc_attr( $row['id'] ); ?>">
+                        <label class="screen-reader-text" for="scf-cb-<?php echo $id; ?>">Select submission <?php echo $id; ?></label>
+                        <input id="scf-cb-<?php echo $id; ?>" type="checkbox" name="ids[]" value="<?php echo $id; ?>">
                     </th>
-                    <td class="column-id"><?php echo esc_html( $row['id'] ); ?></td>
-                    <td><?php echo esc_html( $row['name'] ); ?></td>
-                    <td><a href="mailto:<?php echo esc_attr( $row['email'] ); ?>"><?php echo esc_html( $row['email'] ); ?></a></td>
-                    <td><?php echo esc_html( $row['phone'] ); ?></td>
-                    <td><?php echo esc_html( $row['company'] ?? '' ); ?></td>
-                    <td class="column-message"><div class="scf-message"><?php echo esc_html( $row['message'] ); ?></div></td>
-                    <td class="column-date"><?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $row['submitted_at'] ) ) ); ?></td>
-                    <td>
-                        <?php
-                        $del_url = wp_nonce_url(
-                            add_query_arg( [ 'page' => 'simple-contact-form', 'delete_id' => $row['id'] ], admin_url( 'admin.php' ) ),
-                            'scf_delete_' . $row['id']
-                        );
-                        ?>
-                        <a href="<?php echo esc_url( $del_url ); ?>" class="button button-small"
+                    <td class="column-toggle">
+                        <button type="button" class="scf-toggle" aria-expanded="false" aria-controls="scf-detail-<?php echo $id; ?>">
+                            <span class="screen-reader-text">Show details for submission <?php echo $id; ?></span>
+                            <span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
+                        </button>
+                    </td>
+                    <td class="column-id"><?php echo $id; ?></td>
+                    <td class="column-name"><?php echo esc_html( $row['name'] ); ?></td>
+                    <td class="column-email"><a href="mailto:<?php echo esc_attr( $row['email'] ); ?>"><?php echo esc_html( $row['email'] ); ?></a></td>
+                    <td class="column-phone"><?php echo esc_html( $row['phone'] ); ?></td>
+                    <td class="column-company"><?php echo esc_html( $row['company'] ?? '' ); ?></td>
+                    <td class="column-message"><?php echo esc_html( $row['message'] ); ?></td>
+                    <td class="column-date"><?php echo esc_html( $date ); ?></td>
+                    <td class="column-actions">
+                        <a href="<?php echo esc_url( $del_url ); ?>" class="button-link button-link-delete"
                            onclick="return confirm('Delete this submission?')">Delete</a>
+                    </td>
+                </tr>
+                <tr class="scf-detail" id="scf-detail-<?php echo $id; ?>" hidden>
+                    <td colspan="10">
+                        <dl>
+                            <dt>ID</dt><dd><?php echo $id; ?></dd>
+                            <dt>Name</dt><dd><?php echo esc_html( $row['name'] ); ?></dd>
+                            <dt>Email</dt><dd><a href="mailto:<?php echo esc_attr( $row['email'] ); ?>"><?php echo esc_html( $row['email'] ); ?></a></dd>
+                            <dt>Phone</dt><dd><?php echo esc_html( $row['phone'] ); ?></dd>
+                            <dt>Company</dt><dd><?php echo esc_html( $row['company'] ?? '' ); ?></dd>
+                            <dt>Message</dt><dd><?php echo esc_html( $row['message'] ); ?></dd>
+                            <dt>Date</dt><dd><?php echo esc_html( $date ); ?></dd>
+                        </dl>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -233,6 +322,24 @@ function scf_render_submissions_page() {
                 var count = this.querySelectorAll( 'input[name="ids[]"]:checked' ).length;
                 if ( ! count ) { e.preventDefault(); alert( 'Select at least one submission.' ); return; }
                 if ( ! confirm( 'Delete ' + count + ' submission' + ( count > 1 ? 's' : '' ) + '? This cannot be undone.' ) ) e.preventDefault();
+            } );
+
+            // Clicking the chevron, or anywhere else on the row, opens and closes
+            // the full details row below it. Links, the checkbox and text
+            // selection keep their normal behaviour.
+            document.querySelector( '.scf-submissions tbody' ).addEventListener( 'click', function ( e ) {
+                var btn = e.target.closest( '.scf-toggle' );
+                if ( ! btn ) {
+                    var row = e.target.closest( 'tr:not(.scf-detail)' );
+                    if ( ! row || e.target.closest( 'a, input, label, button, .check-column' ) ) return;
+                    if ( String( window.getSelection() ) ) return;
+                    btn = row.querySelector( '.scf-toggle' );
+                }
+                var open = 'true' !== btn.getAttribute( 'aria-expanded' );
+                var label = btn.querySelector( '.screen-reader-text' );
+                btn.setAttribute( 'aria-expanded', open );
+                label.textContent = label.textContent.replace( /^\w+/, open ? 'Hide' : 'Show' );
+                document.getElementById( btn.getAttribute( 'aria-controls' ) ).hidden = ! open;
             } );
         </script>
         <?php if ( $pages > 1 ) : ?>

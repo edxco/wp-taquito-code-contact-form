@@ -118,8 +118,10 @@
                 } catch ( e ) {} // Cross-origin URL (e.g. WPML per-language domains).
             }
 
-            $( 'html, body' ).animate( { scrollTop: $thankyou.offset().top - 80 }, 300 );
-            $thankyou.trigger( 'focus' );
+            // Move focus for screen readers without scrolling the page.
+            if ( $thankyou[0] ) {
+                $thankyou[0].focus( { preventScroll: true } );
+            }
         }
 
         function showError( msg ) {

@@ -2,14 +2,14 @@
 /**
  * Plugin Name: EBC Form
  * Description: A contact form that stores submissions in DB, sends emails to multiple recipients, and shows a customizable thank-you message.
- * Version: 1.7.0
+ * Version: 1.8.0
  * Author: Eduardo Baeza
  * Text Domain: simple-contact-form
  */
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SCF_VERSION', '1.7.0' );
+define( 'SCF_VERSION', '1.8.0' );
 define( 'SCF_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SCF_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

@@ -3,6 +3,30 @@
 All notable changes to this plugin are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.8.0] - 2026-10-02
+
+### Added
+- **Submissions**: every column (ID, Name, Email, Phone, Company, Message,
+  Date) can be sorted by clicking its header; click again to reverse. The sort
+  covers all submissions, not just the current page, and is kept when paging
+  or deleting. Newest first is still the default.
+- **Submissions**: each row has a chevron that expands it to show every field
+  in full, including the whole message with its line breaks. Clicking anywhere
+  else on the row does the same, except on links, the checkbox, or while
+  selecting text.
+
+### Changed
+- **Submissions**: a minimal table with no stripes or frame, and every row the
+  same height. Long values end in an ellipsis instead of wrapping.
+- **Submissions**: the message no longer expands while a row is hovered; use
+  the row's details instead.
+- **Submissions**: Delete is a text link instead of a button.
+- The thank-you title is centered.
+
+### Fixed
+- Showing the thank-you message no longer scrolls the page. Focus still moves
+  to it for screen readers.
+
 ## [1.7.0] - 2026-10-02
 
 ### Added

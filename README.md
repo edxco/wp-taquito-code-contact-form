@@ -8,7 +8,9 @@ thank-you message in place of the form. No page reload is needed.
 
 - **Five-field form**: name, email, phone, company and message, all required.
 - **Stored submissions**: every submission is saved and listed under
-  **Contact Form → Submissions**, with single and bulk delete.
+  **Contact Form → Submissions**. Every column can be sorted, each row
+  expands to show the full submission, and rows can be deleted one at a time
+  or in bulk.
 - **Email notifications**: each lead goes to one or more recipients. You can
   set a custom From name and From email, and send a test email from the
   settings page.
