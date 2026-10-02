@@ -1,0 +1,318 @@
+/* ── Simple Contact Form — NAPSsoft design ───────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600&family=Poppins:wght@400;600&display=swap');
+
+/* ── Tokens ───────────────────────────────────────────────────────────────── */
+:root {
+    --scf-black-dark:    #212222;
+    --scf-black-regular: #363736;
+    --scf-gray-dark:     #939795;
+    --scf-blue:          #02447B;
+    --scf-blue-shadow:   rgba(0, 71, 171, 0.32);
+    --scf-card-bg:       rgba(212, 225, 247, 0.20);
+    --scf-input-border:  rgba(26, 46, 66, 0.20);
+    --scf-white:         #ffffff;
+    --scf-error-bg:      #fef2f2;
+    --scf-error-text:    #b91c1c;
+}
+
+/* ── Outer wrapper ────────────────────────────────────────────────────────── */
+.scf-wrapper {
+    width: 100%;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--scf-black-dark);
+    box-sizing: border-box;
+}
+.scf-wrapper *, .scf-wrapper *::before, .scf-wrapper *::after {
+    box-sizing: border-box;
+}
+
+/* ── Card ─────────────────────────────────────────────────────────────────── */
+.scf-card {
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    padding: 0;
+    width: 100%;
+}
+
+/* ── Left aside ───────────────────────────────────────────────────────────── */
+.scf-aside {
+    flex: 1 0 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    justify-content: center;
+}
+
+.scf-aside-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.scf-heading {
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--scf-black-dark);
+    margin: 0;
+}
+
+.scf-subtext {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 22px;
+    color: var(--scf-black-regular);
+    margin: 0;
+}
+
+/* ── Logo row ─────────────────────────────────────────────────────────────── */
+.scf-logos-block {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.scf-logos-label {
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 28px;
+    color: var(--scf-black-dark);
+    margin: 0;
+}
+
+.scf-logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 12px;
+}
+
+.scf-logo-row img {
+    height: 40px;
+    width: auto;
+    max-width: 74px;
+    object-fit: contain;
+    opacity: 0.85;
+    filter: grayscale(20%);
+}
+
+/* ── Right form panel ─────────────────────────────────────────────────────── */
+.scf-form-panel {
+    flex: 1 0 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    justify-content: center;
+}
+
+/* ── Fields ───────────────────────────────────────────────────────────────── */
+.scf-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.scf-field {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.scf-field label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 22px;
+    color: var(--scf-black-dark);
+    padding: 8px 16px 4px;
+}
+
+.scf-field input,
+.scf-field textarea {
+    width: 100%;
+    background: var(--scf-white);
+    border: 1px solid var(--scf-input-border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 22px;
+    color: var(--scf-black-dark);
+    transition: border-color .18s, box-shadow .18s;
+    outline: none;
+}
+
+.scf-field input::placeholder,
+.scf-field textarea::placeholder {
+    color: var(--scf-gray-dark);
+}
+
+.scf-field input:focus,
+.scf-field textarea:focus {
+    border-color: var(--scf-blue);
+    box-shadow: 0 0 0 3px rgba(2, 68, 123, 0.12);
+}
+
+.scf-field textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* ── Error alert ──────────────────────────────────────────────────────────── */
+.scf-alert {
+    border-radius: 7px;
+    padding: .75rem 1rem;
+    font-size: .875rem;
+    font-weight: 500;
+    display: none;
+}
+.scf-alert--error {
+    background: var(--scf-error-bg);
+    color: var(--scf-error-text);
+    border: 1px solid #fca5a5;
+}
+
+/* ── Submit button ────────────────────────────────────────────────────────── */
+.scf-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 18px;
+    background: var(--scf-blue);
+    color: var(--scf-white);
+    border: 1px solid var(--scf-blue);
+    border-radius: 6px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 10px 14px var(--scf-blue-shadow);
+    transition: background .18s, transform .1s;
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-top: 24px;
+}
+.scf-submit:hover   { background: #013561; }
+.scf-submit:active  { transform: scale(.97); }
+.scf-submit:disabled { opacity: .65; cursor: not-allowed; }
+
+.scf-submit svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+/* ── Honeypot ─────────────────────────────────────────────────────────────── */
+.scf-hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px; height: 1px;
+    overflow: hidden; opacity: 0; pointer-events: none;
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .scf-card {
+        flex-direction: column;
+        gap: 40px;
+        padding: 40px 24px;
+        border-radius: 24px;
+    }
+
+    .scf-aside { width: 100%; }
+
+    .scf-heading {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 28px;
+        line-height: 1.2;
+    }
+
+    .scf-subtext {
+        font-family: 'Poppins', sans-serif;
+        font-size: 15px;
+    }
+
+    /* Hide logo row on mobile (not in mobile Figma design) */
+    .scf-logos-block { display: none; }
+
+    /* Pill inputs on mobile */
+    .scf-field input,
+    .scf-field textarea {
+        border-radius: 41px;
+    }
+
+    .scf-field textarea {
+        border-radius: 20px;
+    }
+
+    .scf-field label {
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+        line-height: normal;
+    }
+
+    /* Pill button on mobile */
+    .scf-submit {
+        border-radius: 40px;
+        padding: 10px 18px;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+        font-size: 15px;
+        box-shadow: none;
+        gap: 8px;
+    }
+
+    .scf-submit svg { width: 16px; height: 16px; }
+}
+
+/* ── Thank-you message (replaces the form after submission) ─────────────── */
+.scf-thankyou {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    outline: none;
+}
+.scf-thankyou[hidden] { display: none; }
+
+.scf-thankyou-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 1.2;
+    color: var(--scf-black-dark);
+    margin: 0;
+}
+
+.scf-thankyou-message {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 22px;
+    color: var(--scf-black-regular);
+}
+.scf-thankyou-message p { margin: 0; }
+.scf-thankyou-message p + p { margin-top: 8px; }
+
+.scf-thankyou-image {
+    display: block;
+    width: 300px;
+    height: auto;
+    border-radius: 24px;
+    margin-top: 8px;
+}
